@@ -9,20 +9,21 @@ public class AnalisadorLexico {
     private boolean ehFinalDoArquivo = false;
     private boolean devolverC = false;
     private char caractereDevolvido;
-    private char[] conteudoNeto;  /*retirar essa merda pra manda no verde */
-    private int posicao;  /*retirar essa merda pra manda no verde */
+    // private char[] conteudoNeto;  /*retirar essa merda pra manda no verde */
+    // private int posicao;  /*retirar essa merda pra manda no verde */
     private int linhas;
 
     /*    Construtor do analisador lexico    */
     public AnalisadorLexico()  {
-        try {
-            var conteudo = new String(Files.readAllBytes(Paths.get("input.in")), StandardCharsets.UTF_8);
-            conteudoNeto = conteudo.toCharArray();
-            posicao = 0;
-            linhas = 1;
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
+        // try {
+        //     var conteudo = new String(Files.readAllBytes(Paths.get("input.in")), StandardCharsets.UTF_8);
+        //     conteudoNeto = conteudo.toCharArray();
+        //     posicao = 0;
+            
+        // } catch (Exception e) {
+        //     e.printStackTrace();
+        // }
+        linhas = 1;
         /*retirar essa merda toda do construtor pra manda no verde */
     }
 
@@ -30,8 +31,8 @@ public class AnalisadorLexico {
      que estão no vetor de conteudo do arquivo de entrada*/
     public Token proximoToken() {
         estado = 0;
-        ehFinalDoArquivo();/*retirar essa merda pra manda no verde */
-        if (ehFinalDoArquivo) return null;/*retirar essa merda pra manda no verde */
+        // ehFinalDoArquivo();/*retirar essa merda pra manda no verde */
+        // if (ehFinalDoArquivo) return null;/*retirar essa merda pra manda no verde */
         int estadoFinal = 1;
         String textoTokenAtual = "";
         char atual;
@@ -58,6 +59,8 @@ public class AnalisadorLexico {
                         estado = 2;
                     } else if (ehTokenValido(atual)) {
                         estado = estadoFinal;
+                        Token token = geraTokenReservado(atual);
+                        return token; 
                     } else if (atual == '-') {
                         estado = 7;
                     } else if (atual == '.') {
@@ -75,6 +78,8 @@ public class AnalisadorLexico {
                     } else if (ehEspaco(atual)) { 
                         textoTokenAtual = "";
                         estado = 0;
+                    } else if (atual == '/') { 
+                        estado = 18;
                     } else {
                         throw new RuntimeException("line 79");
                     }
@@ -96,7 +101,12 @@ public class AnalisadorLexico {
 
                 case 3:
                     if (atual == '|') {
+                        textoTokenAtual += atual;
                         estado = estadoFinal;
+                        Token token = new Token();
+                        token.setTipo(Token.CODIGO_PIPE);
+                        token.setTexto(textoTokenAtual);
+                        return token;
                     } else if (atual != '|') {
                         throw new RuntimeException(linhas + "\ncaractere invalido.");
                     }
@@ -298,21 +308,82 @@ public class AnalisadorLexico {
                     } else {
                         throw new RuntimeException(linhas + "\ncaractere invalido.");
                     }
-                case 18:
-                    if (atual == '/') {
+                case 18: 
+                    if (atual == '*') {
                         textoTokenAtual += atual;
-                        estado = 18;         
-                    } else {
+                        estado = 19;         
+                    } else  {
                         estado = estadoFinal;
                         devolver(atual);
                         Token token = new Token();
-                        token.setTipo(Token.CODIGO_COMENTARIO);
+                        token.setTipo(Token.CODIGO_BARRA);
                         token.setTexto(textoTokenAtual);
                         return token; 
-                    }        
+                    }      
+                case 19:
+                    if (atual == '*') {
+                        textoTokenAtual += atual;
+                        estado = 20;         
+                    } else {
+                        textoTokenAtual += atual;
+                        estado = 19;
+                    }     
+                case 20:
+                    if (atual == '/') {
+                        textoTokenAtual += atual;
+                        estado = estadoFinal;     
+                        Token token = new Token();
+                        token.setTipo(Token.CODIGO_COMENTARIO);
+                        token.setTexto(textoTokenAtual);
+                        return token;     
+                    } else {
+                        textoTokenAtual += atual;
+                        estado = 19;
+                    }     
             }
          
         }
+    }
+
+    private Token geraTokenReservado(char atual) {
+        Token token = new Token();
+        switch (atual){
+            case '=':
+                token.setTipo(Token.CODIGO_IGUAL);
+                break;
+            case '(':
+                token.setTipo(Token.CODIGO_ABREPARENTESES);
+                break;
+            case ')':
+                token.setTipo(Token.CODIGO_FECHAPARENTESES);
+                break;
+            case ',':
+                token.setTipo(Token.CODIGO_VIRGULA);
+                break;
+            case '+':
+                token.setTipo(Token.CODIGO_MAIS);
+                break;
+            case '*':
+                token.setTipo(Token.CODIGO_ASTERISCO);
+                break;
+            case ';':
+                token.setTipo(Token.CODIGO_PONTOVIRGULA);
+                break;
+            case '{':
+                token.setTipo(Token.CODIGO_ABRECHAVES);
+                break;
+            case '}':
+                token.setTipo(Token.CODIGO_FECHACHAVES);
+                break;
+            case '[':
+                token.setTipo(Token.CODIGO_ABRECOCHETES);
+                break;
+            case ']':
+                token.setTipo(Token.CODIGO_FECHACOCHETES);
+                break;
+
+        }
+        return token;
     }
 
     private boolean ehCharHexa(char c) {
@@ -329,7 +400,7 @@ public class AnalisadorLexico {
     /*Metodos privados para facilitar na identificação dos tokens */
     private boolean ehTokenValido (char c) {
         return (c == '(' || c == ')' || c == '[' || c == ']' || c == '{' || c == '}' 
-            || c == ';' || c == ',' || c == '=' || c == '+'  || c == '=' 
+            || c == ';' || c == ',' || c == '=' || c == '+'   
             || c == '%' || c == '?' );
     } 
 
@@ -358,8 +429,8 @@ public class AnalisadorLexico {
             devolverC = false;
             return caractereDevolvido;
         } else {
-            //int caractere = System.in.read();
-            int caractere = nextCharFile(); /*retirar essa merda pra manda no verde */
+            int caractere = System.in.read();
+            //int caractere = nextCharFile(); /*retirar essa merda pra manda no verde */
             contaLinhas(caractere);
             if (caractere == -1) {
                 ehFinalDoArquivo = true;
@@ -381,13 +452,13 @@ public class AnalisadorLexico {
         caractereDevolvido = caractere;
     }
 
-    /*retirar essa merda pra manda no verde */
-    private char nextCharFile ()  {
-        return conteudoNeto[posicao++];
-    }
-    /*retirar essa merda pra manda no verde */
-    private boolean  ehFinalDoArquivo  () {
-        return posicao == conteudoNeto.length;
-    }
+    // /*retirar essa merda pra manda no verde */
+    // private char nextCharFile ()  {
+    //     return conteudoNeto[posicao++];
+    // }
+    // /*retirar essa merda pra manda no verde */
+    // private boolean  ehFinalDoArquivo  () {
+    //     return posicao == conteudoNeto.length;
+    // }
 }
 
