@@ -56,7 +56,7 @@ public class AnalisadorLexico {
                         estado = 3;
                     } else if (atual == '&') {
                         estado = 2;
-                    } else if (ehValido(atual)) {
+                    } else if (ehTokenValido(atual)) {
                         estado = estadoFinal;
                     } else if (atual == '-') {
                         estado = 7;
@@ -70,13 +70,13 @@ public class AnalisadorLexico {
                         estado = 14;
                     } else if (atual == '\"') {
                         estado = 15;
-                    } else if (atual == '\'') {
+                    } else if (atual == '\'') { 
                         estado = 16;
-                    } else if (ehEspaco(atual)) {
+                    } else if (ehEspaco(atual)) { 
                         textoTokenAtual = "";
                         estado = 0;
                     } else {
-                        throw new RuntimeException("line 67");
+                        throw new RuntimeException("line 79");
                     }
                     if (estado > 0) textoTokenAtual += atual;
                     break;
@@ -264,17 +264,52 @@ public class AnalisadorLexico {
                         return token;
                     }
                 case 15:
-                    if (ehNumero(atual) || ehChar(atual)) {
-
+                    if ( ehNumero(atual) || ehChar(atual) || ehValidoString(atual) ) {
+                        textoTokenAtual += atual;
+                        estado = 15;
+                    } else if (atual == '"'){
+                        textoTokenAtual += (char)'$';
+                        textoTokenAtual += atual;
+                        estado = estadoFinal;
+                        Token token = new Token();
+                        token.setTipo(Token.CODIGO_STRING);
+                        token.setTexto(textoTokenAtual);
+                        return token;
+                    } else {
+                        throw new RuntimeException(linhas + "\ncaractere invalido.");
                     }
+                    break;
                 case 16:
-                    if (ehNumero(atual) || ehChar(atual)) {
-
+                    if ( ehNumero(atual) || ehChar(atual) || ehValidoString(atual) || atual == '\n' || atual == '"' ) {
+                        textoTokenAtual += atual;
+                        estado = 17;
+                    } else {
+                        throw new RuntimeException(linhas + "\ncaractere invalido.");
                     }
+                    break;
                 case 17:
-                    if (ehNumero(atual) || ehChar(atual)) {
-
+                    if (atual == '\'' ) {
+                        textoTokenAtual += atual;
+                        estado = estadoFinal;
+                        Token token = new Token();
+                        token.setTipo(Token.CODIGO_CHAR);
+                        token.setTexto(textoTokenAtual);
+                        return token;
+                    } else {
+                        throw new RuntimeException(linhas + "\ncaractere invalido.");
                     }
+                case 18:
+                    if (atual == '/') {
+                        textoTokenAtual += atual;
+                        estado = 18;         
+                    } else {
+                        estado = estadoFinal;
+                        devolver(atual);
+                        Token token = new Token();
+                        token.setTipo(Token.CODIGO_COMENTARIO);
+                        token.setTexto(textoTokenAtual);
+                        return token; 
+                    }        
             }
          
         }
@@ -284,8 +319,15 @@ public class AnalisadorLexico {
         return ( c >= 'a' && c <= 'f' ) || ( c >= 'A' && c <= 'F' ) || ehNumero(c);
     }
 
+    private boolean ehValidoString (char c) {
+        return (ehChar(c) || ehNumero(c) ||  c == ' ' || c == '_' || c == '.' || c == ',' || c == ';' || 
+                c == ':' || c == '(' || c == ')' || c == '[' || c == ']' || c == '{' || c == '}' ||
+                c == '+' || c == '-' || c == '\'' || c == '|' || c == '\\' || c == '/' ||
+                c == '&' || c == '?' || c == '%' || c == '?'|| c == '!' || c == '>' || c == '<' || c == '=' );
+    }
+
     /*Metodos privados para facilitar na identificação dos tokens */
-    private boolean ehValido (char c) {
+    private boolean ehTokenValido (char c) {
         return (c == '(' || c == ')' || c == '[' || c == ']' || c == '{' || c == '}' 
             || c == ';' || c == ',' || c == '=' || c == '+'  || c == '=' 
             || c == '%' || c == '?' );
