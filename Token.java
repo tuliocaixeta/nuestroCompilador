@@ -13,6 +13,9 @@ public class Token {
     public static final int CODIGO_EXCLAMACAO = 11;
     public static final int CODIGO_HEXA = 12;
     public static final int CODIGO_MENOS = 12;
+    public static final int CODIGO_STRING = 13;
+    public static final int CODIGO_CHAR = 14;
+    public static final int CODIGO_COMENTARIO = 15;
 
     public int tipo;
     public String texto;
