@@ -9,7 +9,7 @@ public class MainClass {
                 if (token != null)  System.out.println("token = [" +token.tipo +" , "+ token.texto+"]");
             } while (token != null); // ate que nao exista mais tokens a serem lidos
         } catch (Exception e) {
-            //TODO: handle exception
+            System.out.println(e.getMessage());
         }
         
     }
