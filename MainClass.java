@@ -6,11 +6,10 @@ public class MainClass {
         try {
             do {
                 token = lexico.proximoToken();  // obtem em loop todos os tokens do arquivo passado para analisador lexico
-                if (token != null)  System.out.print(token.tipo);
-                if (token != null)  System.out.print(token.texto);
+                if (token != null)  System.out.println("token = [" +token.tipo +" , "+ token.texto+"]");
             } while (token != null); // ate que nao exista mais tokens a serem lidos
         } catch (Exception e) {
-            //TODO: handle exception
+            System.out.println(e.getMessage());
         }
         
     }
