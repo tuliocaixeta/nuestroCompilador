@@ -1,4 +1,7 @@
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 
 public class AnalisadorLexico {
 
@@ -6,21 +9,33 @@ public class AnalisadorLexico {
     private boolean ehFinalDoArquivo = false;
     private boolean devolverC = false;
     private char caractereDevolvido;
+    private char[] conteudoNeto;  /*retirar essa merda pra manda no verde */
+    private int posicao;  /*retirar essa merda pra manda no verde */
 
     /*    Construtor do analisador lexico    */
-    public AnalisadorLexico() {}
+    public AnalisadorLexico()  {
+        try {
+            var conteudo = new String(Files.readAllBytes(Paths.get("input.in")), StandardCharsets.UTF_8);
+            conteudoNeto = conteudo.toCharArray();
+            posicao = 0;
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        /*retirar essa merda toda do construtor pra manda no verde */
+    }
 
     /*Metodo responsavel pela leitura e identificação dos tokens
      que estão no vetor de conteudo do arquivo de entrada*/
     public Token proximoToken() {
         estado = 0;
+        
         int estadoFinal = 1;
         String textoTokenAtual = "";
         while (true ) {
             try {
                 char atual = nextChar();
                 if (ehFinalDoArquivo) return null;
-                textoTokenAtual += atual;
+               
                 switch (estado) {
                     case 0: 
                         if (atual == '!') {
@@ -36,24 +51,26 @@ public class AnalisadorLexico {
                         } else if (ehValido(atual)) {
                             estado = estadoFinal;
                         } else if (atual == '-') {
-                            estado = 12;
+                            estado = 7;
                         } else if (atual == '.') {
-                            estado = 13;
+                            estado = 12;
                         } else if (ehNumero(atual) && atual != '0') {
                             estado = 8;
                         } else if (atual == '0') {
                             estado = 9;
                         } else if (ehChar(atual) || atual == '_') {
-                            estado = 15;
+                            estado = 14;
                         } else if (atual == '\"') {
-                            estado = 16;
+                            estado = 15;
                         } else if (atual == '\'') {
-                            estado = 17;
+                            estado = 16;
                         } else if (ehEspaco(atual)) {
+                            textoTokenAtual = "";
                             estado = 0;
                         } else {
                             throw new RuntimeException("line 67");
                         }
+                        if (estado > 0) textoTokenAtual += atual;
                         break;
             
                     case 2:
@@ -104,12 +121,76 @@ public class AnalisadorLexico {
                             token.setTipo(Token.CODIGO_MENOR);
                             token.setTexto(textoTokenAtual);
                             return token;
-                            
                         }
+                    case 5:
+                        if (atual == '=') { /*>=*/
+                            textoTokenAtual += atual;
+                            estado = estadoFinal;
+                            Token token = new Token();
+                            token.setTipo(Token.CODIGO_MAIORIGUAL);
+                            token.setTexto(textoTokenAtual);
+                            return token;
+                     
+                        } else { /*>*/
+                            devolver(atual);
+                            estado = estadoFinal;
+                            Token token = new Token();
+                            token.setTipo(Token.CODIGO_MAIOR);
+                            token.setTexto(textoTokenAtual);
+                            return token;
+                        }
+                    case 6:
+                        if (atual == '=') { /*!=*/
+                            textoTokenAtual += atual;
+                            estado = estadoFinal;
+                            Token token = new Token();
+                            token.setTipo(Token.CODIGO_EXCLAMACAOIGUAL);
+                            token.setTexto(textoTokenAtual);
+                            return token;
+                     
+                        } else { /*!*/
+                            devolver(atual);
+                            estado = estadoFinal;
+                            Token token = new Token();
+                            token.setTipo(Token.CODIGO_EXCLAMACAO);
+                            token.setTexto(textoTokenAtual);
+                            return token;
+                        }
+                    case 7:
+                        if (atual == '.') { /*-.567*/
+                            textoTokenAtual += atual;
+                            estado = 12;
+
+                        } else if (ehNumero(atual)) { /*-45678*/
+                            textoTokenAtual += atual;
+                            estado = 8;
+                     
+                        } else { /*!*/
+                           //erro
+                        }
+                    case 8: 
+                        if (ehNumero(atual)) { /*continua no estado 8 enquanto vier mais numeros*/
+                            textoTokenAtual += atual;
+                            estado = 8;
+
+                        } else  if (atual == '.') { /*recebe ponto entao vai para estado de numero real*/
+                            textoTokenAtual += atual;
+                            estado = 12;
+
+                        } else { /*numero inteiro positivo ou negativo*/
+                            devolver(atual);
+                            estado = estadoFinal;
+                            Token token = new Token();
+                            token.setTipo(Token.CODIGO_INTEIRO);
+                            token.setTexto(textoTokenAtual);
+                            return token;
+                        }
+                    case 9:
+                        
                         
                 }
             } catch (Exception e) {
-                //TODO: handle exception
+               
             }
          
         }
@@ -135,7 +216,7 @@ public class AnalisadorLexico {
     }
 
     public boolean ehEspaco (char c) {
-        return c == ' ' || c == '\n';
+        return c == ' ' || c == '\n' || (int) c == 13 || c == '\t';
     }   
 
     /*Metodo privado responsavel por retornar proximo caractere a ser interpretado
@@ -144,9 +225,11 @@ public class AnalisadorLexico {
     */
     private char nextChar () throws IOException {
         if (devolverC) {
+            devolverC = false;
             return caractereDevolvido;
         } else {
-            int caractere = System.in.read();
+            //int caractere = System.in.read();
+            int caractere = nextCharFile(); /*retirar essa merda pra manda no verde */
             if (caractere == -1) {
                 ehFinalDoArquivo = true;
             }
@@ -154,10 +237,16 @@ public class AnalisadorLexico {
         }
     }
 
+
     /*Metodo privado responsavel por devolver o caractere quando não é utilizado no token atual */
     private void devolver(char caractere) {
         devolverC = true;
         caractereDevolvido = caractere;
+    }
+
+    /*retirar essa merda pra manda no verde */
+    private char nextCharFile ()  {
+        return conteudoNeto[posicao++];
     }
 }
 

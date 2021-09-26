@@ -6,6 +6,11 @@ public class Token {
     public static final int CODIGO_MENORIGUAL = 5;
     public static final int CODIGO_ATRIBUICAO = 6;
     public static final int CODIGO_MENOR = 7;
+    public static final int CODIGO_MAIORIGUAL = 8;
+    public static final int CODIGO_MAIOR = 9;
+    public static final int CODIGO_EXCLAMACAOIGUAL = 10;
+    public static final int CODIGO_EXCLAMACAO = 11;
+    public static final int CODIGO_INTEIRO = 11;
 
     public int tipo;
     public String texto;
