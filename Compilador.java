@@ -396,7 +396,7 @@ class Compilador {
                         }
                         break;
                     case 15:
-                        if ( ehNumero(atual) || ehChar(atual) || ehValidoString(atual) ) {
+                        if ( (ehNumero(atual) || ehChar(atual) || ehValidoString(atual)) && textoTokenAtual.length() <= 255 ) {
                             textoTokenAtual += atual;
                             estado = 15;
                         } else if (atual == '"'){
@@ -408,7 +408,10 @@ class Compilador {
                             token.setTexto(textoTokenAtual);
                             token.setTipo("tipo_string");
                             return retornar(token); 
-                        } else {
+                        } else if (ehValido(atual) || ( atual != '"' && textoTokenAtual.length() == 256)){
+                            textoTokenAtual += atual;
+                            throw new RuntimeException(linhas + "\nlexema nao identificado ["+textoTokenAtual+"].");
+                        }else {
                             throw new RuntimeException(linhas + "\ncaractere invalido.");
                         }
                         break;
