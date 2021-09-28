@@ -364,7 +364,7 @@ class Compilador {
                         if (ehNumero(atual)){
                             textoTokenAtual += atual;
                             estado = 13;
-                        } else if (!ehValido(atual)){
+                        } else if (ehValido(atual)){
                             textoTokenAtual += atual;
                             throw new RuntimeException(linhas + "\nlexema nao identificado ["+textoTokenAtual+"].");
                         }else {

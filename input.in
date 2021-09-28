@@ -1,5 +1,5 @@
 /* Exemplo de Programa na linguagem L */
-
+100..92
 int n<-1;
 string nome;
 const MAXITER=10;
