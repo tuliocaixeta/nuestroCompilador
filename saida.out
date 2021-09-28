@@ -1,0 +1,15 @@
+token = [36 , 100.92 , tipo_float]
+token = [35 , a , null]
+token = [26 , int , null]
+token = [35 , n , null]
+token = [3 , <- , null]
+token = [36 , 1 , tipo_inteiro]
+token = [18 , ; , null]
+token = [35 , string , null]
+token = [35 , nome , null]
+token = [18 , ; , null]
+token = [23 , const , null]
+token = [35 , MAXITER , null]
+token = [12 , = , null]
+6
+lexema nao identificado [0xh].

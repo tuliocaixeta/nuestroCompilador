@@ -104,16 +104,16 @@ class Compilador {
         private boolean ehFinalDoArquivo = false;
         private boolean devolverC = false;
         private char caractereDevolvido;
-        // private char[] conteudoNeto;  /*retirar essa merda pra manda no verde */
-        // private int posicao;  /*retirar essa merda pra manda no verde */
+        private char[] conteudoNeto;  /*retirar essa merda pra manda no verde */
+        private int posicao;  /*retirar essa merda pra manda no verde */
         private int linhas; 
         public TabelaSimbolo tabelaSimbolo;
         /*    Construtor do analisador lexico    */
         public AnalisadorLexico(TabelaSimbolo tabelaSimbolo)  {
             try {
-                // var conteudo = new String(Files.readAllBytes(Paths.get("input.in")), StandardCharsets.UTF_8);
-                // conteudoNeto = conteudo.toCharArray();
-                // posicao = 0;
+                var conteudo = new String(Files.readAllBytes(Paths.get("input.in")), StandardCharsets.UTF_8);
+                conteudoNeto = conteudo.toCharArray();
+                posicao = 0;
                 this.tabelaSimbolo = tabelaSimbolo;
                 linhas = 1;
             } catch (Exception e) {
@@ -138,14 +138,14 @@ class Compilador {
                 } catch (Exception e) {
                     throw new RuntimeException(linhas + "\n caractere invalido.");
                 }
-                // if ( ehFinalDoArquivo()) {/*retirar essa merda pra manda no verde */
-                //     if (estado > 1) {
-                //         throw new RuntimeException(linhas + "\nfim de arquivo nao esperado.");
-                //     } else if (estado == 0) {
-                //         System.out.print(linhas + " linhas compiladas.");
-                //     }
-                //     return null;
-                // }
+                if ( ehFinalDoArquivo()) {/*retirar essa merda pra manda no verde */
+                    if (estado > 1) {
+                        throw new RuntimeException(linhas + "\nfim de arquivo nao esperado.");
+                    } else if (estado == 0) {
+                        System.out.print(linhas + " linhas compiladas.");
+                    }
+                    return null;
+                }
                 if (ehFinalDoArquivo) {
                     if (estado > 1) {
                         throw new RuntimeException(linhas + "\nfim de arquivo nao esperado.");
@@ -364,15 +364,18 @@ class Compilador {
                         if (ehNumero(atual)){
                             textoTokenAtual += atual;
                             estado = 13;
-                        } else {
+                        } else if (!ehValido(atual)){
+                            textoTokenAtual += atual;
+                            throw new RuntimeException(linhas + "\nlexema nao identificado ["+textoTokenAtual+"].");
+                        }else {
                             throw new RuntimeException(linhas + "\ncaractere invalido.");
                         }
+                        break;
                     case 13:
                         if (ehNumero(atual)){
                             textoTokenAtual += atual;
                             estado = 13;
                         } else {
-                            textoTokenAtual += atual;
                             estado = estadoFinal;
                             devolver(atual);
                             Token token = new Token();
@@ -381,6 +384,7 @@ class Compilador {
                             token.setTipo("tipo_float");
                             return retornar(token); 
                         }
+                        break;
                     case 14: // continua concatenando caracteres de Identificador caso seja verdadeiro
                         if (ehNumero(atual) || ehChar(atual) || atual == '.' || atual == '_') {
                             textoTokenAtual += atual;
@@ -425,8 +429,11 @@ class Compilador {
                             token.setTexto(textoTokenAtual);
                             token.setTipo("tipo_caractere");
                             return retornar(token); 
-                        } else {
+                        } else if (!ehValido(atual)){
+                            textoTokenAtual += atual;
                             throw new RuntimeException(linhas + "\nlexema nao identificado ["+textoTokenAtual+"].");
+                        }else {
+                            throw new RuntimeException(linhas + "\ncaractere invalido.");
                         }
                     case 18: 
                         if (atual == '*') {
@@ -594,14 +601,14 @@ class Compilador {
             caractereDevolvido = caractere;
         }
     
-        // /*retirar essa merda pra manda no verde */
-        // private char nextCharFile ()  {
-        //     return conteudoNeto[posicao++];
-        // }
-        // /*retirar essa merda pra manda no verde */
-        // private boolean  ehFinalDoArquivo  () {
-        //     return posicao == conteudoNeto.length;
-        // }
+        /*retirar essa merda pra manda no verde */
+        private char nextCharFile ()  {
+            return conteudoNeto[posicao++];
+        }
+        /*retirar essa merda pra manda no verde */
+        private boolean  ehFinalDoArquivo  () {
+            return posicao == conteudoNeto.length;
+        }
     }
     public static class TabelaSimbolo {
         int endereco = 0;
