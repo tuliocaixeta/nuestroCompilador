@@ -4,9 +4,191 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.HashMap;
 
+import javax.xml.transform.ErrorListener;
+
+import jdk.nashorn.internal.parser.Lexer.RegexToken;
+
 
 class Compilador {
-    
+
+    public static class AnalisadorSintatico {
+
+        AnalisadorLexico lexico;
+        TabelaSimbolo tabela;
+        Token token; 
+
+        public AnalisadorSintatico() {
+            try {
+                tabela = new TabelaSimbolo();
+                lexico = new AnalisadorLexico(tabela);
+                token = lexico.proximoToken();
+
+                // if(token == null) {
+                //     token = lexico.proximoToken(); // verificar depois se precisa por conta do comentario
+                // }
+
+            } catch (Exception e){
+                verificaFinalArquivo();
+                System.out.print(e);
+            }
+        }
+
+        public void casaToken(byte numTokenEsperado) {
+           
+            if( token != null ){
+                if( token.getNumToken() == numTokenEsperado){
+                    token = lexico.proximoToken();
+                } else {
+                    throw new RuntimeException(lexico.linhas + "\ntoken nao esperado ["+token.texto+"].");
+                }
+            } else {
+                throw new RuntimeException(lexico.linhas + "\nfim de arquivo nao esperado.");
+            }
+        }
+
+        public void S () {
+            if (token != null) {
+                do {
+                    declaracao();
+                } while (token.getNumToken() == Token.CODIGO_INT || token.getNumToken() == Token.CODIGO_FLOAT ||
+                         token.getNumToken() == Token.CODIGO_CHAR || token.getNumToken() == Token.CODIGO_STRING );
+                do {
+                    comandos();
+                } while (ehComando());
+                
+            } else {
+                throw new RuntimeException(lexico.linhas + "\nfim de arquivo nao esperado.");
+            }
+        }
+
+        private void declaracao() {
+            if (token != null) {
+                if (token.getNumToken() == Token.CODIGO_INT || token.getNumToken() == Token.CODIGO_FLOAT ||
+                        token.getNumToken() == Token.CODIGO_CHAR || token.getNumToken() == Token.CODIGO_STRING ){
+                    casaToken(token.getNumToken());
+                    casaToken(Token.CODIGO_ID);
+                    if (token.getNumToken() == Token.CODIGO_VIRGULA ) {
+                        while ( token.getNumToken() == Token.CODIGO_VIRGULA ) {
+                            casaToken(Token.CODIGO_VIRGULA);
+                            casaToken(Token.CODIGO_ID);
+                        }
+                    }
+                    casaToken(Token.CODIGO_PONTOVIRGULA);
+                } else if (token.getNumToken() == Token.CODIGO_CONST ) {
+                    casaToken(Token.CODIGO_CONST);
+                    casaToken(Token.CODIGO_ID);
+                    casaToken(Token.CODIGO_IGUAL);
+                    casaToken(Token.CODIGO_PONTOVIRGULA);
+                }
+             } else {
+                throw new RuntimeException(lexico.linhas + "\nfim de arquivo nao esperado.");
+            }
+        }
+
+        private void comandos() {
+            if (token != null) {
+                if (token.getNumToken() ==  Token.CODIGO_ABRECHAVES){
+                    casaToken(Token.CODIGO_ABRECHAVES);
+                    while ( ehComando()) {
+                       comando();
+                    }
+                    casaToken(Token.CODIGO_FECHACHAVES);
+                } else {
+                    comando();
+                }
+            } else {
+                throw new RuntimeException(lexico.linhas + "\nfim de arquivo nao esperado.");
+            }
+        }
+
+        private void comando() {
+            if (token != null) {
+                if (token.getNumToken() ==  Token.CODIGO_ID){ //validar com a sabedoria
+                    atribuicao();
+                } else if (token.getNumToken() ==  Token.CODIGO_WHILE){
+                    repeticao();
+                } else if (token.getNumToken() ==  Token.CODIGO_IF){
+                    teste();
+                } else if (token.getNumToken() ==  Token.CODIGO_READLN){
+                    leitura();
+                } else if (token.getNumToken() ==  Token.CODIGO_WRITE || token.getNumToken() ==  Token.CODIGO_WRITE){
+                    escrita();
+                }
+            } else {
+                throw new RuntimeException(lexico.linhas + "\nfim de arquivo nao esperado.");
+            }
+        }
+
+        private void expressao() {
+            //todo: falta fazer
+        }
+
+
+        private void escrita() {
+            casaToken(token.getNumToken());
+            casaToken(Token.CODIGO_ABREPARENTESES);
+            expressao();
+            if (token.getNumToken() == Token.CODIGO_VIRGULA ) {
+                while ( token.getNumToken() == Token.CODIGO_VIRGULA ) {
+                    casaToken(Token.CODIGO_VIRGULA);
+                    casaToken(Token.CODIGO_ID);
+                }
+            }
+            casaToken(Token.CODIGO_FECHAPARENTESES);
+        }
+
+        private void leitura() {
+            casaToken(Token.CODIGO_READLN);
+            casaToken(Token.CODIGO_ABREPARENTESES);
+            casaToken(Token.CODIGO_ID);
+            if (token.getNumToken() ==  Token.CODIGO_ID){
+                casaToken(Token.CODIGO_ID);
+            } else {
+                expressao();
+            }
+        }
+
+        private void teste() {
+            casaToken(Token.CODIGO_IF);
+            expressao(); 
+            comandos();
+            casaToken(Token.CODIGO_ELSE);
+            comandos();
+        }
+
+        private void repeticao() {
+            casaToken(Token.CODIGO_WHILE);
+            expressao(); 
+            comandos();
+        }
+
+        private void atribuicao() {
+            casaToken(Token.CODIGO_ID);
+            if (token.getNumToken() ==  Token.CODIGO_ABRECOCHETES){
+                casaToken(Token.CODIGO_ABRECOCHETES);
+                expressao(); 
+                casaToken(Token.CODIGO_FECHACOCHETES);
+            }
+            casaToken(Token.CODIGO_ATRIBUICAO);
+            expressao();
+        }
+
+        private boolean ehComando() {
+            return ( token.getNumToken() == Token.CODIGO_ID || token.getNumToken() == Token.CODIGO_ATRIBUICAO ||
+            token.getNumToken() == Token.CODIGO_WHILE || token.getNumToken() == Token.CODIGO_IF || 
+            token.getNumToken() == Token.CODIGO_ELSE || token.getNumToken() == Token.CODIGO_READLN ||
+            token.getNumToken() == Token.CODIGO_WRITE || token.getNumToken() == Token.CODIGO_WRITELN);
+        }
+        
+        public void verificaFinalArquivo() {
+            if (lexico.ehFinalDoArquivo) {
+                throw new RuntimeException(lexico.linhas + 1 + "\nFim de arquivo nao esperado.");
+            }
+         }
+
+    }
+
+
     public static class Token {
 
         public static final byte CODIGO_AND = 1; 
@@ -44,9 +226,10 @@ class Compilador {
         public static final byte CODIGO_WRITELN = 32;
         public static final byte CODIGO_MOD = 33;
         public static final byte CODIGO_WRITE = 34;
+        public static final byte CODIGO_STRING = 35;
 
-        public static final byte CODIGO_ID = 35;
-        public static final byte CODIGO_CONSTANTE = 36;
+        public static final byte CODIGO_ID = 36;
+        public static final byte CODIGO_CONSTANTE = 37;
 
 
         public byte numToken;
@@ -621,6 +804,7 @@ class Compilador {
             tabela.put("const", new Token(Token.CODIGO_CONST, "const", endereco++));
             tabela.put("int", new Token(Token.CODIGO_INT, "int", endereco++));
             tabela.put("char", new Token(Token.CODIGO_CHAR, "char", endereco++));
+            tabela.put("string", new Token(Token.CODIGO_STRING, "string", endereco++));
             tabela.put("while", new Token(Token.CODIGO_WHILE, "while", endereco++));
             tabela.put("if", new Token(Token.CODIGO_IF, "if", endereco++));
             tabela.put("float", new Token(Token.CODIGO_FLOAT, "float", endereco++));
