@@ -104,16 +104,16 @@ class Compilador {
         private boolean ehFinalDoArquivo = false;
         private boolean devolverC = false;
         private char caractereDevolvido;
-        private char[] conteudoNeto;  /*retirar essa merda pra manda no verde */
-        private int posicao;  /*retirar essa merda pra manda no verde */
+        // private char[] conteudoNeto;  /*retirar essa merda pra manda no verde */
+        // private int posicao;  /*retirar essa merda pra manda no verde */
         private int linhas; 
         public TabelaSimbolo tabelaSimbolo;
         /*    Construtor do analisador lexico    */
         public AnalisadorLexico(TabelaSimbolo tabelaSimbolo)  {
             try {
-                var conteudo = new String(Files.readAllBytes(Paths.get("input.in")), StandardCharsets.UTF_8);
-                conteudoNeto = conteudo.toCharArray();
-                posicao = 0;
+                // var conteudo = new String(Files.readAllBytes(Paths.get("input.in")), StandardCharsets.UTF_8);
+                // conteudoNeto = conteudo.toCharArray();
+                // posicao = 0;
                 this.tabelaSimbolo = tabelaSimbolo;
                 linhas = 1;
             } catch (Exception e) {
@@ -138,14 +138,14 @@ class Compilador {
                 } catch (Exception e) {
                     throw new RuntimeException(linhas + "\n caractere invalido.");
                 }
-                if ( ehFinalDoArquivo()) {/*retirar essa merda pra manda no verde */
-                    if (estado > 1) {
-                        throw new RuntimeException(linhas + "\nfim de arquivo nao esperado.");
-                    } else if (estado == 0) {
-                        System.out.print(linhas + " linhas compiladas.");
-                    }
-                    return null;
-                }
+                // if ( ehFinalDoArquivo()) {/*retirar essa merda pra manda no verde */
+                //     if (estado > 1) {
+                //         throw new RuntimeException(linhas + "\nfim de arquivo nao esperado.");
+                //     } else if (estado == 0) {
+                //         System.out.print(linhas + " linhas compiladas.");
+                //     }
+                //     return null;
+                // }
                 if (ehFinalDoArquivo) {
                     if (estado > 1) {
                         throw new RuntimeException(linhas + "\nfim de arquivo nao esperado.");
@@ -408,7 +408,7 @@ class Compilador {
                             token.setTexto(textoTokenAtual);
                             token.setTipo("tipo_string");
                             return retornar(token); 
-                        } else if (ehValido(atual) || ( atual != '"' && textoTokenAtual.length() == 256)){
+                        } else if (ehValido(atual) || ( ehValido(atual) && atual != '"' && textoTokenAtual.length() == 256)){
                             textoTokenAtual += atual;
                             throw new RuntimeException(linhas + "\nlexema nao identificado ["+textoTokenAtual+"].");
                         }else {
@@ -604,14 +604,14 @@ class Compilador {
             caractereDevolvido = caractere;
         }
     
-        /*retirar essa merda pra manda no verde */
-        private char nextCharFile ()  {
-            return conteudoNeto[posicao++];
-        }
-        /*retirar essa merda pra manda no verde */
-        private boolean  ehFinalDoArquivo  () {
-            return posicao == conteudoNeto.length;
-        }
+        // /*retirar essa merda pra manda no verde */
+        // private char nextCharFile ()  {
+        //     return conteudoNeto[posicao++];
+        // }
+        // /*retirar essa merda pra manda no verde */
+        // private boolean  ehFinalDoArquivo  () {
+        //     return posicao == conteudoNeto.length;
+        // }
     }
     public static class TabelaSimbolo {
         int endereco = 0;
@@ -678,7 +678,7 @@ class Compilador {
         try {
             do {
                 token = lexico.proximoToken();  // obtem em loop todos os tokens do arquivo passado para analisador lexico
-                if (token != null)  System.out.println("token = [" +token.numToken +" , "+ token.texto+" , "+ token.tipo+"]");
+                //if (token != null)  System.out.println("token = [" +token.numToken +" , "+ token.texto+" , "+ token.tipo+"]");
             } while (token != null); // ate que nao exista mais tokens a serem lidos
         } catch (Exception e) {
             System.out.println(e.getMessage());
