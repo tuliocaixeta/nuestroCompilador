@@ -18,7 +18,7 @@ class Compilador {
                 lexico = new AnalisadorLexico(tabela);
                 token = lexico.proximoToken();
                 
-                System.out.println("token = [" +token.numToken +" , "+ token.texto+" , "+ token.tipo+"]");
+                //System.out.println("token = [" +token.numToken +" , "+ token.texto+" , "+ token.tipo+"]");
 
                 // if(token == null) {
                 //     token = lexico.proximoToken(); // verificar depois se precisa por conta do comentario
@@ -34,11 +34,10 @@ class Compilador {
            
             if( token != null ){
                 if( token.getNumToken() == numTokenEsperado){
+                    //System.out.println("token = [" +token.numToken +" , "+ token.texto+" , "+ token.tipo+"]");
                     token = lexico.proximoToken();
-                    if (token == null) {
-                        System.out.println( linhas + " linhas compiladas.");
-                    }
-                    System.out.println("token = [" +token.numToken +" , "+ token.texto+" , "+ token.tipo+"]");
+                    
+                    
                 } else {
                     throw new RuntimeException(linhas + "\ntoken nao esperado ["+token.texto+"].");
                 }
@@ -49,16 +48,17 @@ class Compilador {
 
         public void S () {
             while (token != null) {
-                declaracao();
-                declaracao();
-                comando();
-                // while (token != null && ehDeclaracao()) {
-                //     declaracao();
-                // } 
-                // while (token != null && ehComando()) {
-                //     comandos();
-                // } 
+                // declaracao();
+                // declaracao();
+                // comando();
+                while (token != null && ehDeclaracao()) {
+                    declaracao();
+                } 
+                while (token != null && ehComando()) {
+                    comandos();
+                } 
             }
+            System.out.print( linhas + " linhas compiladas.");
             
         }
 
@@ -72,14 +72,14 @@ class Compilador {
                 if (ehDeclaracao() ){
                     casaToken(token.getNumToken());
                     casaToken(Token.CODIGO_ID);
-                    if (token.getNumToken() == Token.CODIGO_VIRGULA ) {
+                    if (token != null && token.getNumToken() == Token.CODIGO_VIRGULA ) {
                         while ( token.getNumToken() == Token.CODIGO_VIRGULA ) {
                             casaToken(Token.CODIGO_VIRGULA);
                             casaToken(Token.CODIGO_ID);
                         }
                     }
                     casaToken(Token.CODIGO_PONTOVIRGULA);
-                } else if (token.getNumToken() == Token.CODIGO_CONST ) {
+                } else if (token != null && token.getNumToken() == Token.CODIGO_CONST ) {
                     casaToken(Token.CODIGO_CONST);
                     casaToken(Token.CODIGO_ID);
                     casaToken(Token.CODIGO_IGUAL);
@@ -94,7 +94,7 @@ class Compilador {
             if (token != null) {
                 if (token.getNumToken() ==  Token.CODIGO_ABRECHAVES){
                     casaToken(Token.CODIGO_ABRECHAVES);
-                    while ( ehComando()) {
+                    while (token != null &&  ehComando()) {
                        comando();
                     }
                     casaToken(Token.CODIGO_FECHACHAVES);
@@ -127,7 +127,7 @@ class Compilador {
 
         private void expressao() {
             expressaoInterna();
-            if (ehRelacional()) {
+            if (token != null && ehRelacional()) {
                 casaToken(token.getNumToken());
                 expressaoInterna(); //todo: terminar
             }
@@ -136,15 +136,15 @@ class Compilador {
 
     
         private void expressaoInterna() {
-            if (token.getNumToken() == Token.CODIGO_MAIS ) {
+            if (token != null && token.getNumToken() == Token.CODIGO_MAIS ) {
                 casaToken(Token.CODIGO_MAIS);
-            } else if (token.getNumToken() == Token.CODIGO_MENOS ) {
+            } else if (token != null && token.getNumToken() == Token.CODIGO_MENOS ) {
                 casaToken(Token.CODIGO_MENOS);
             }
             termo();
-            while ( token.getNumToken() == Token.CODIGO_MAIS ||
+            while (token != null && (token.getNumToken() == Token.CODIGO_MAIS ||
                     token.getNumToken() == Token.CODIGO_MENOS || 
-                    token.getNumToken() == Token.CODIGO_PIPE ) {
+                    token.getNumToken() == Token.CODIGO_PIPE )) {
                 casaToken(token.getNumToken());
                 termo();
             }
@@ -154,12 +154,18 @@ class Compilador {
 
         private void termo() {
             fator();
-            while ( token.getNumToken() == Token.CODIGO_ASTERISCO ||token.getNumToken() == Token.CODIGO_BARRA ||
-                    token.getNumToken() == Token.CODIGO_AND || token.getNumToken() == Token.CODIGO_DIV ||
-                    token.getNumToken() == Token.CODIGO_MOD ) {
-                casaToken(token.getNumToken());
-                fator();
+            if (token != null) {
+                while ( token.getNumToken() == Token.CODIGO_ASTERISCO ||token.getNumToken() == Token.CODIGO_BARRA ||
+                        token.getNumToken() == Token.CODIGO_AND || token.getNumToken() == Token.CODIGO_DIV ||
+                        token.getNumToken() == Token.CODIGO_MOD ) {
+                    casaToken(token.getNumToken());
+                    if (token != null) { 
+                       fator(); 
+                    }
+                    
+                }
             }
+          
 
         }
 
@@ -197,7 +203,7 @@ class Compilador {
             casaToken(token.getNumToken());
             casaToken(Token.CODIGO_ABREPARENTESES);
             expressao();
-            if (token.getNumToken() == Token.CODIGO_VIRGULA ) {
+            if (token != null && token.getNumToken() == Token.CODIGO_VIRGULA ) {
                 while ( token.getNumToken() == Token.CODIGO_VIRGULA ) {
                     casaToken(Token.CODIGO_VIRGULA);
                     casaToken(Token.CODIGO_ID);
@@ -210,7 +216,7 @@ class Compilador {
             casaToken(Token.CODIGO_READLN);
             casaToken(Token.CODIGO_ABREPARENTESES);
             casaToken(Token.CODIGO_ID);
-            if (token.getNumToken() ==  Token.CODIGO_ID){
+            if (token != null && token.getNumToken() ==  Token.CODIGO_ID){
                 casaToken(Token.CODIGO_ID);
             } else {
                 expressao();
@@ -233,7 +239,7 @@ class Compilador {
 
         private void atribuicao() {
             casaToken(Token.CODIGO_ID);
-            if (token.getNumToken() ==  Token.CODIGO_ABRECOCHETES){
+            if (token != null && token.getNumToken() ==  Token.CODIGO_ABRECOCHETES){
                 casaToken(Token.CODIGO_ABRECOCHETES);
                 expressao(); 
                 casaToken(Token.CODIGO_FECHACOCHETES);
@@ -361,16 +367,16 @@ class Compilador {
         private boolean ehFinalDoArquivo = false;
         private boolean devolverC = false;
         private char caractereDevolvido;
-        private char[] conteudoNeto;  /*retirar essa merda pra manda no verde */
-        private int posicao;  /*retirar essa merda pra manda no verde */
+        // private char[] conteudoNeto;  /*retirar essa merda pra manda no verde */
+        // private int posicao;  /*retirar essa merda pra manda no verde */
        // public int linhas; 
         public TabelaSimbolo tabelaSimbolo;
         /*    Construtor do analisador lexico    */
         public AnalisadorLexico(TabelaSimbolo tabelaSimbolo)  {
             try {
-                var conteudo = new String(Files.readAllBytes(Paths.get("input.in")), StandardCharsets.UTF_8);
-                conteudoNeto = conteudo.toCharArray();
-                posicao = 0;
+                // var conteudo = new String(Files.readAllBytes(Paths.get("input.in")), StandardCharsets.UTF_8);
+                // conteudoNeto = conteudo.toCharArray();
+                // posicao = 0;
                 this.tabelaSimbolo = tabelaSimbolo;
                 linhas = 1;
             } catch (Exception e) {
@@ -397,20 +403,18 @@ class Compilador {
                 } catch (Exception e) {
                     throw new RuntimeException(linhas + "\n caractere invalido1.");
                 }
-                if ( ehFinalDoArquivo()) {/*retirar essa merda pra manda no verde */
+                // if ( ehFinalDoArquivo()) {/*retirar essa merda pra manda no verde */
+                //     if (estado > 1) {
+                //         throw new RuntimeException(linhas + "\nfim de arquivo nao esperado.");
+                //     } 
+                //     return null;
+                // }
+                if (ehFinalDoArquivo) {
                     if (estado > 1) {
                         throw new RuntimeException(linhas + "\nfim de arquivo nao esperado.");
-                    }  else if (estado == 0) {
-                        System.out.print(linhas + " linhas compiladas.");
                     }
                     return null;
                 }
-                // if (ehFinalDoArquivo) {
-                //     if (estado > 1) {
-                //         throw new RuntimeException(linhas + "\nfim de arquivo nao esperado.");
-                //     }
-                //     return null;
-                // }
                 switch (estado) {
                     case 0: 
                         if (atual == '!') {
@@ -855,8 +859,8 @@ class Compilador {
                 devolverC = false;
                 return caractereDevolvido;
             } else {
-                //int caractere = System.in.read();
-                int caractere = nextCharFile(); /*retirar essa merda pra manda no verde */
+                int caractere = System.in.read();
+                 //  int caractere = nextCharFile(); /*retirar essa merda pra manda no verde */
                 contaLinhas(caractere);
                 if (caractere == -1) {
                     ehFinalDoArquivo = true;
@@ -878,14 +882,14 @@ class Compilador {
             caractereDevolvido = caractere;
         }
     
-        /*retirar essa merda pra manda no verde */
-        private char nextCharFile ()  {
-            return conteudoNeto[posicao++];
-        }
-        /*retirar essa merda pra manda no verde */
-        private boolean  ehFinalDoArquivo  () {
-            return posicao == conteudoNeto.length ;
-        }
+        // /*retirar essa merda pra manda no verde */
+        // private char nextCharFile ()  {
+        //     return conteudoNeto[posicao++];
+        // }
+        // /*retirar essa merda pra manda no verde */
+        // private boolean  ehFinalDoArquivo  () {
+        //     return posicao == conteudoNeto.length ;
+        // }
     }
     public static class TabelaSimbolo {
         int endereco = 0;
@@ -964,7 +968,7 @@ class Compilador {
             sintatico.S();
            
         } catch (Exception e) {
-            System.out.println(e.getMessage());
+            System.out.print(e.getMessage());
         }
     }
 }
