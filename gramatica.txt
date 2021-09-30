@@ -20,9 +20,33 @@
 //Escrita -> (write|writeln) "("Exp {"," Exp}*")"
 
 
-//Exp -> ExpS [Comp ExpS]
-//Comp -> (= | != | < | > | <= | >=)
+//Exp -> ExpS [(= | != | < | > | <= | >=) ExpS]
 //ExpS -> [+|-] T {(+|-|"||") T}
 //T -> F {(*|/|&&|div|mod) F}
-//F -> ID["[" Exp "]"] | const | !F | P | "int" P | "float" P
+//F -> ID["[" Exp "]"] | constante |não F | P | "int" P | "float" P
 //P -> "("Exp")"
+
+
+
+ void S() {
+      try {
+         if (s != null) {
+          
+            do {
+               checkEOF();
+               D();
+            } while (ehDeclaracao());
+            
+          
+            
+            do {
+               checkEOF();
+               C();
+            } while (ehComando());
+
+         }
+      } catch (Exception e) {
+         checkEOF();
+         System.err.println(e.toString());
+      }
+   }
