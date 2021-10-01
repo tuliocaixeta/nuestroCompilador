@@ -29,15 +29,11 @@ class Compilador {
         }
 
         public void casaToken(byte numTokenEsperado) {
-           
             if( token != null ){
                 if( token.getNumToken() == numTokenEsperado){
-                   //System.out.println("token = [" +token.numToken +" , "+ token.texto+" , "+ token.tipo+"]");
                     token = lexico.proximoToken();
-                   //System.out.println("token = [" +token.numToken +" , "+ token.texto+" , "+ token.tipo+"]");
-                    
                 } else {
-                    throw new RuntimeException(linhas + "\ntoken nao esperado ["+token.texto+"].");
+                    throw new RuntimeException(linhas + "\ntoken nao esperado [[].");
                 }
             } else {
                 throw new RuntimeException(linhas + "\nfim de arquivo nao esperado.");
@@ -50,7 +46,7 @@ class Compilador {
                 while (token != null && (ehDeclaracao()) || token != null && token.getNumToken() == Token.CODIGO_CONST ) {
                     declaracao();
                 } 
-                while (token != null && ehComando()) {
+                while (token != null && (ehComando() || token.getNumToken() == Token.CODIGO_PONTOVIRGULA ||  token.getNumToken() == Token.CODIGO_ABRECHAVES)) {
                     comandos();
                 } 
             }
@@ -284,7 +280,7 @@ class Compilador {
 
         public void verificaFinalArquivo() {
             if (lexico.ehFinalDoArquivo) {
-                throw new RuntimeException(linhas + "\nFim de arquivo nao esperado.");
+                throw new RuntimeException(linhas + "\nfim de arquivo nao esperado.");
             }
          }
     }
@@ -724,7 +720,8 @@ class Compilador {
                         if (ehNumero(atual) || ehChar(atual) || atual == '.' || atual == '_') {
                             textoTokenAtual += atual;
                             estado = 14;
-                            
+                            if (textoTokenAtual.length() > 32)
+                                throw new RuntimeException(linhas + "\nlexema nao identificado ["+textoTokenAtual+"].");
                         } else {  // Retorna token ID ou token palavra reservada
                             estado = estadoFinal;
                             devolver(atual);
@@ -752,10 +749,13 @@ class Compilador {
                         }
                         break;
                     case 16:
-                        if ( ehNumero(atual) || ehChar(atual) || ehValido(atual)  ) {
+                        if (atual != '\n' &&( ehNumero(atual) || ehChar(atual) || ehValido(atual) ) ) {
                             textoTokenAtual += atual;
                             estado = 17;
-                        } else {
+                        }  else if ( ( atual == '\n' || atual == -1 || (int)atual == 65535)){
+                            //textoTokenAtual += atual;
+                            throw new RuntimeException(linhas + "\nlexema nao identificado ["+textoTokenAtual+"].");
+                        }else {
                             throw new RuntimeException(linhas + "\ncaractere invalido.");
                         }
                         break;
@@ -768,9 +768,12 @@ class Compilador {
                             token.setTexto(textoTokenAtual);
                             token.setTipo("tipo_caractere");
                             return retornar(token); 
-                        } else if (!ehValido(atual)|| atual == -1 || (int)atual == 65535){
+                        } else if (  ehValido(atual) ){
                             //textoTokenAtual += atual;
                             throw new RuntimeException(linhas + "\nlexema nao identificado ["+textoTokenAtual+"].");
+                        } else if ( atual == -1 || (int)atual == 65535){
+                            //textoTokenAtual += atual;
+                            throw new RuntimeException(linhas + "\nfim de arquivo nao esperado.");
                         }else {
                             throw new RuntimeException(linhas + "\ncaractere invalido.");
                         }
