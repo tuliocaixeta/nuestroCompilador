@@ -6,6 +6,7 @@ import java.util.HashMap;
 
 class Compilador {
     public static int linhas;
+    public static int contadorPrecisao;
     public static class AnalisadorSintatico {
 
         AnalisadorLexico lexico;
@@ -87,12 +88,18 @@ class Compilador {
                         }
                     }
                     casaToken(Token.CODIGO_PONTOVIRGULA);
+                    if (token == null) {
+                        throw new RuntimeException( linhas + " linhas compiladas.");
+                    }
                 } else if (token != null && token.getNumToken() == Token.CODIGO_CONST ) {
                     casaToken(Token.CODIGO_CONST);
                     casaToken(Token.CODIGO_ID);
                     casaToken(Token.CODIGO_IGUAL);
                     expressao();
                     casaToken(Token.CODIGO_PONTOVIRGULA);
+                    if (token == null) {
+                        throw new RuntimeException( linhas + " linhas compiladas.");
+                     }
                 }
              } else {
                 throw new RuntimeException(linhas + "\nfim de arquivo nao esperado.");
@@ -138,6 +145,9 @@ class Compilador {
                     escrita();
                 }
                 casaToken(Token.CODIGO_PONTOVIRGULA);
+                if (token == null) {
+                    throw new RuntimeException( linhas + " linhas compiladas.");
+                 }
             } else {
                 throw new RuntimeException(linhas + "\nfim de arquivo nao esperado.");
             }
@@ -664,6 +674,7 @@ class Compilador {
                         if (ehNumero(atual)){
                             textoTokenAtual += atual;
                             estado = 13;
+                            contadorPrecisao = 1;
                         } else if (ehValido(atual)|| atual == -1 || (int)atual == 65535){
                             //textoTokenAtual += atual;
                             throw new RuntimeException(linhas + "\nlexema nao identificado ["+textoTokenAtual+"].");
@@ -672,9 +683,11 @@ class Compilador {
                         }
                         break;
                     case 13:
-                        if (ehNumero(atual)){
+                            
+                        if (ehNumero(atual) && contadorPrecisao <= 6){
                             textoTokenAtual += atual;
                             estado = 13;
+                            contadorPrecisao++;
                         } else {
                             estado = estadoFinal;
                             devolver(atual);
