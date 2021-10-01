@@ -20,7 +20,8 @@ class Compilador {
             
 
             } catch (Exception e){
-                verificaFinalArquivo();
+
+               // verificaFinalArquivo();
                 System.out.print(e.getMessage());
             }
         }
@@ -384,9 +385,9 @@ class Compilador {
         private boolean ehFinalDoArquivo = false;
         private boolean devolverC = false;
         private char caractereDevolvido;
-        // private char[] conteudoNeto;  /*retirar essa merda pra manda no verde */
-        // private int posicao;  /*retirar essa merda pra manda no verde */
-       // public int linhas; 
+    //     private char[] conteudoNeto;  /*retirar essa merda pra manda no verde */
+    //     private int posicao;  /*retirar essa merda pra manda no verde */
+
         public TabelaSimbolo tabelaSimbolo;
         /*    Construtor do analisador lexico    */
         public AnalisadorLexico(TabelaSimbolo tabelaSimbolo)  {
@@ -421,14 +422,18 @@ class Compilador {
                     throw new RuntimeException(linhas + "\n caractere invalido.");
                 }
                 // if ( ehFinalDoArquivo()) {/*retirar essa merda pra manda no verde */
-                //     if (estado > 1) {
-                //         throw new RuntimeException(linhas + "\nfim de arquivo nao esperado.");
-                //     } 
-                //     return null;
+                // //    if (estado >= 16 && estado <= 20) {
+                //     throw new RuntimeException(linhas + "\nfim de arquivo nao esperado.");
+                // } else if (estado > 1 && estado < 16 ) {
+                //     throw new RuntimeException(linhas + "\nlexema nao identificado ["+textoTokenAtual+"].");
+                // }
+                // return null;
                 // }
                 if (ehFinalDoArquivo) {
-                    if (estado > 1) {
+                    if (estado >= 16 && estado <= 20) {
                         throw new RuntimeException(linhas + "\nfim de arquivo nao esperado.");
+                    } else if (estado > 1 && estado < 16 ) {
+                        throw new RuntimeException(linhas + "\nlexema nao identificado ["+textoTokenAtual+"].");
                     }
                     return null;
                 }
@@ -489,7 +494,7 @@ class Compilador {
                             return retornar(token);
                         
                         } else if (atual != '&') {
-                            if (ehValido(atual)){
+                            if (ehValido(atual) || atual == -1 || (int)atual == 65535){
                                 //textoTokenAtual += atual;
                                 throw new RuntimeException(linhas + "\nlexema nao identificado ["+textoTokenAtual+"].");
                             } else {
@@ -507,7 +512,7 @@ class Compilador {
                             token.setTexto(textoTokenAtual);
                             return retornar(token); 
                         } else if (atual != '|') {
-                            if (ehValido(atual)){
+                            if (ehValido(atual)|| atual == -1 || (int)atual == 65535){
                                 //textoTokenAtual += atual;
                                 throw new RuntimeException(linhas + "\nlexema nao identificado ["+textoTokenAtual+"].");
                             } else {
@@ -633,8 +638,8 @@ class Compilador {
                         if (ehCharHexa(atual)){/*0xD hexadecimal*/
                             textoTokenAtual += atual;
                             estado = 11;
-                        } else if (ehValido(atual)){ /*0xT hexadecimal*/
-                            textoTokenAtual += atual;
+                        } else if (ehValido(atual)|| atual == -1 || (int)atual == 65535){ /*0xT hexadecimal*/
+                            //textoTokenAtual += atual;
                             throw new RuntimeException(linhas + "\nlexema nao identificado ["+textoTokenAtual+"].");
                         } else { /*0x# hexadecimal*/
                             throw new RuntimeException(linhas + "\ncaractere invalido.");
@@ -649,7 +654,7 @@ class Compilador {
                             token.setTexto(textoTokenAtual);
                             token.setTipo("tipo_caractere");
                             return retornar(token); 
-                        } else if (ehValido(atual)){ /*0xDT hexadecimal*/
+                        } else if (ehValido(atual)|| atual == -1 || (int)atual == 65535){ /*0xDT hexadecimal*/
                             //textoTokenAtual += atual;
                             throw new RuntimeException(linhas + "\nlexema nao identificado ["+textoTokenAtual+"].");
                         } else { /*0xD# hexadecimal*/
@@ -659,7 +664,7 @@ class Compilador {
                         if (ehNumero(atual)){
                             textoTokenAtual += atual;
                             estado = 13;
-                        } else if (ehValido(atual)){
+                        } else if (ehValido(atual)|| atual == -1 || (int)atual == 65535){
                             //textoTokenAtual += atual;
                             throw new RuntimeException(linhas + "\nlexema nao identificado ["+textoTokenAtual+"].");
                         }else {
@@ -703,7 +708,7 @@ class Compilador {
                             token.setTexto(textoTokenAtual);
                             token.setTipo("tipo_string");
                             return retornar(token); 
-                        } else if ( ( ehValido(atual) /*&& atual != '"' && textoTokenAtual.length() == 256) || ehValido(atual*/)){
+                        } else if ( ( ehValido(atual) || atual == -1 || (int)atual == 65535)){
                             //textoTokenAtual += atual;
                             throw new RuntimeException(linhas + "\nlexema nao identificado ["+textoTokenAtual+"].");
                         }else {
@@ -727,7 +732,7 @@ class Compilador {
                             token.setTexto(textoTokenAtual);
                             token.setTipo("tipo_caractere");
                             return retornar(token); 
-                        } else if (!ehValido(atual)){
+                        } else if (!ehValido(atual)|| atual == -1 || (int)atual == 65535){
                             //textoTokenAtual += atual;
                             throw new RuntimeException(linhas + "\nlexema nao identificado ["+textoTokenAtual+"].");
                         }else {
@@ -879,7 +884,7 @@ class Compilador {
                 int caractere = System.in.read();
                 // int caractere = nextCharFile(); /*retirar essa merda pra manda no verde */
                 contaLinhas(caractere);
-                if (caractere == -1) {
+                if (caractere == -1 || caractere == 65535 ) {
                     ehFinalDoArquivo = true;
                 }
                 return (char) caractere;
@@ -965,19 +970,6 @@ class Compilador {
         // todo: metodo recuperar endereço de simbolo
     }
 
-    // public static void main(String[] args) throws Exception {
-    //     TabelaSimbolo tabelaSimbolo = new TabelaSimbolo();
-    //     AnalisadorLexico lexico = new AnalisadorLexico(tabelaSimbolo); //inicializa analisador lexico 
-    //     Token token = null;
-    //     try {
-    //         do {
-    //             token = lexico.proximoToken();  // obtem em loop todos os tokens do arquivo passado para analisador lexico
-    //             //if (token != null)  System.out.println("token = [" +token.numToken +" , "+ token.texto+" , "+ token.tipo+"]");
-    //         } while (token != null); // ate que nao exista mais tokens a serem lidos
-    //     } catch (Exception e) {
-    //         System.out.println(e.getMessage());
-    //     }
-    // }
 
     public static void main (String[] args) throws Exception {
         try {
