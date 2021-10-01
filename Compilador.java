@@ -17,16 +17,11 @@ class Compilador {
                 tabela = new TabelaSimbolo();
                 lexico = new AnalisadorLexico(tabela);
                 token = lexico.proximoToken();
-                
-                //System.out.println("token = [" +token.numToken +" , "+ token.texto+" , "+ token.tipo+"]");
-
-                // if(token == null) {
-                //     token = lexico.proximoToken(); // verificar depois se precisa por conta do comentario
-                // }
+            
 
             } catch (Exception e){
                 verificaFinalArquivo();
-                System.out.print(e);
+                System.out.print(e.getMessage());
             }
         }
 
@@ -34,9 +29,9 @@ class Compilador {
            
             if( token != null ){
                 if( token.getNumToken() == numTokenEsperado){
-                    //System.out.println("token = [" +token.numToken +" , "+ token.texto+" , "+ token.tipo+"]");
-                    token = lexico.proximoToken();
                     
+                    token = lexico.proximoToken();
+                   // System.out.println("token = [" +token.numToken +" , "+ token.texto+" , "+ token.tipo+"]");
                     
                 } else {
                     throw new RuntimeException(linhas + "\ntoken nao esperado ["+token.texto+"].");
@@ -47,18 +42,24 @@ class Compilador {
         }
 
         public void S () {
-            while (token != null) {
-                // declaracao();
-                // declaracao();
-                // comando();
-                while (token != null && ehDeclaracao()) {
-                    declaracao();
-                } 
-                while (token != null && ehComando()) {
-                    comandos();
-                } 
+            try {
+                while (token != null) {
+                    // declaracao();
+                    // declaracao();
+                    // comando();
+                    while (token != null && (ehDeclaracao()) ||token.getNumToken() == Token.CODIGO_CONST ) {
+                        declaracao();
+                       
+                    } 
+                    while (token != null && ehComando()) {
+                        comandos();
+                    } 
+                }
+            } catch (Exception e) {
+                System.out.print(e.getMessage()); // ver msg
             }
-            System.out.print( linhas + " linhas compiladas.");
+           
+           
             
         }
 
@@ -72,10 +73,16 @@ class Compilador {
                 if (ehDeclaracao() ){
                     casaToken(token.getNumToken());
                     casaToken(Token.CODIGO_ID);
+                    if (token != null && token.getNumToken() == Token.CODIGO_ATRIBUICAO ) {
+                        atrubuicaoDeclaracao();
+                    }
                     if (token != null && token.getNumToken() == Token.CODIGO_VIRGULA ) {
                         while ( token.getNumToken() == Token.CODIGO_VIRGULA ) {
                             casaToken(Token.CODIGO_VIRGULA);
                             casaToken(Token.CODIGO_ID);
+                            if (token != null && token.getNumToken() == Token.CODIGO_ATRIBUICAO ) {
+                                atrubuicaoDeclaracao();
+                            }
                         }
                     }
                     casaToken(Token.CODIGO_PONTOVIRGULA);
@@ -83,11 +90,17 @@ class Compilador {
                     casaToken(Token.CODIGO_CONST);
                     casaToken(Token.CODIGO_ID);
                     casaToken(Token.CODIGO_IGUAL);
+                    expressao();
                     casaToken(Token.CODIGO_PONTOVIRGULA);
                 }
              } else {
                 throw new RuntimeException(linhas + "\nfim de arquivo nao esperado.");
             }
+        }
+
+        private void atrubuicaoDeclaracao() {
+            casaToken(Token.CODIGO_ATRIBUICAO);
+            casaToken(Token.CODIGO_CONSTANTE);
         }
 
         private void comandos() {
@@ -98,8 +111,12 @@ class Compilador {
                        comando();
                     }
                     casaToken(Token.CODIGO_FECHACHAVES);
+                  
                 } else {
                     comando();
+                }
+                if (token == null) {
+                   throw new RuntimeException( linhas + " linhas compiladas.");
                 }
             } else {
                 throw new RuntimeException(linhas + "\nfim de arquivo nao esperado.");
@@ -116,7 +133,7 @@ class Compilador {
                     teste();
                 } else if (token.getNumToken() ==  Token.CODIGO_READLN){
                     leitura();
-                } else if (token.getNumToken() ==  Token.CODIGO_WRITE || token.getNumToken() ==  Token.CODIGO_WRITE){
+                } else if (token.getNumToken() ==  Token.CODIGO_WRITE || token.getNumToken() ==  Token.CODIGO_WRITELN){
                     escrita();
                 }
                 casaToken(Token.CODIGO_PONTOVIRGULA);
@@ -206,7 +223,7 @@ class Compilador {
             if (token != null && token.getNumToken() == Token.CODIGO_VIRGULA ) {
                 while ( token.getNumToken() == Token.CODIGO_VIRGULA ) {
                     casaToken(Token.CODIGO_VIRGULA);
-                    casaToken(Token.CODIGO_ID);
+                    expressao();
                 }
             }
             casaToken(Token.CODIGO_FECHAPARENTESES);
@@ -215,12 +232,12 @@ class Compilador {
         private void leitura() {
             casaToken(Token.CODIGO_READLN);
             casaToken(Token.CODIGO_ABREPARENTESES);
-            casaToken(Token.CODIGO_ID);
             if (token != null && token.getNumToken() ==  Token.CODIGO_ID){
                 casaToken(Token.CODIGO_ID);
             } else {
                 expressao();
             }
+            casaToken(Token.CODIGO_FECHAPARENTESES);
         }
 
         private void teste() {
@@ -263,7 +280,7 @@ class Compilador {
 
         public void verificaFinalArquivo() {
             if (lexico.ehFinalDoArquivo) {
-                throw new RuntimeException(linhas + 1 + "\nFim de arquivo nao esperado.");
+                throw new RuntimeException(linhas + "\nFim de arquivo nao esperado.");
             }
          }
     }
@@ -401,7 +418,7 @@ class Compilador {
                 try {
                     atual = nextChar();
                 } catch (Exception e) {
-                    throw new RuntimeException(linhas + "\n caractere invalido1.");
+                    throw new RuntimeException(linhas + "\n caractere invalido.");
                 }
                 // if ( ehFinalDoArquivo()) {/*retirar essa merda pra manda no verde */
                 //     if (estado > 1) {
@@ -455,7 +472,7 @@ class Compilador {
                         } else if ((int)atual == 65535) { 
                             return null;
                         } else if (!ehValido(atual)){
-                            throw new RuntimeException(linhas + "\ncaractere invalido2.");
+                            throw new RuntimeException(linhas + "\ncaractere invalido.");
                         } else {
                             throw new RuntimeException(linhas + "\nlexema nao identificado ["+atual+"].");
                         }
@@ -476,7 +493,7 @@ class Compilador {
                                 //textoTokenAtual += atual;
                                 throw new RuntimeException(linhas + "\nlexema nao identificado ["+textoTokenAtual+"].");
                             } else {
-                                throw new RuntimeException(linhas + "\ncaractere invalido3.");
+                                throw new RuntimeException(linhas + "\ncaractere invalido.");
                             }
                         }
                         break;
@@ -494,7 +511,7 @@ class Compilador {
                                 //textoTokenAtual += atual;
                                 throw new RuntimeException(linhas + "\nlexema nao identificado ["+textoTokenAtual+"].");
                             } else {
-                                throw new RuntimeException(linhas + "\ncaractere invalido4.");
+                                throw new RuntimeException(linhas + "\ncaractere invalido.");
                             }
                         }
                         break;
@@ -620,7 +637,7 @@ class Compilador {
                             textoTokenAtual += atual;
                             throw new RuntimeException(linhas + "\nlexema nao identificado ["+textoTokenAtual+"].");
                         } else { /*0x# hexadecimal*/
-                            throw new RuntimeException(linhas + "\ncaractere invalido5.");
+                            throw new RuntimeException(linhas + "\ncaractere invalido.");
                         }
                         break;
                     case 11:
@@ -636,7 +653,7 @@ class Compilador {
                             //textoTokenAtual += atual;
                             throw new RuntimeException(linhas + "\nlexema nao identificado ["+textoTokenAtual+"].");
                         } else { /*0xD# hexadecimal*/
-                            throw new RuntimeException(linhas + "\ncaractere invalido6.");
+                            throw new RuntimeException(linhas + "\ncaractere invalido.");
                         }
                     case 12:
                         if (ehNumero(atual)){
@@ -646,7 +663,7 @@ class Compilador {
                             //textoTokenAtual += atual;
                             throw new RuntimeException(linhas + "\nlexema nao identificado ["+textoTokenAtual+"].");
                         }else {
-                            throw new RuntimeException(linhas + "\ncaractere invalido7.");
+                            throw new RuntimeException(linhas + "\ncaractere invalido.");
                         }
                         break;
                     case 13:
@@ -690,7 +707,7 @@ class Compilador {
                             //textoTokenAtual += atual;
                             throw new RuntimeException(linhas + "\nlexema nao identificado ["+textoTokenAtual+"].");
                         }else {
-                            throw new RuntimeException(linhas + "\ncaractere invalido8.");
+                            throw new RuntimeException(linhas + "\ncaractere invalido.");
                         }
                         break;
                     case 16:
@@ -698,7 +715,7 @@ class Compilador {
                             textoTokenAtual += atual;
                             estado = 17;
                         } else {
-                            throw new RuntimeException(linhas + "\ncaractere invalido9.");
+                            throw new RuntimeException(linhas + "\ncaractere invalido.");
                         }
                         break;
                     case 17:
@@ -714,7 +731,7 @@ class Compilador {
                             //textoTokenAtual += atual;
                             throw new RuntimeException(linhas + "\nlexema nao identificado ["+textoTokenAtual+"].");
                         }else {
-                            throw new RuntimeException(linhas + "\ncaractere invalido0.");
+                            throw new RuntimeException(linhas + "\ncaractere invalido.");
                         }
                     case 18: 
                         if (atual == '*') {
@@ -860,7 +877,7 @@ class Compilador {
                 return caractereDevolvido;
             } else {
                 int caractere = System.in.read();
-                 //  int caractere = nextCharFile(); /*retirar essa merda pra manda no verde */
+                // int caractere = nextCharFile(); /*retirar essa merda pra manda no verde */
                 contaLinhas(caractere);
                 if (caractere == -1) {
                     ehFinalDoArquivo = true;

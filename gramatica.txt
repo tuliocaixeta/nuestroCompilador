@@ -1,13 +1,13 @@
 //S -> {Declaracao | Comandos} EOF
 
-//Declaracao -> (("char" | "string" | "int" | "float") Lista-de-ids ";" |
+//Declaracao -> (("char" | "string" | "int" | "float") Lista-de-ids [] ";" |
 	"const" ID "=" Exp ";")
 				
-//Lista-de-ids -> ID {"," ID}*	
+//Lista-de-ids -> ID [<- constante]{"," ID  [<- constante]}*	
 
 //Comandos -> "{" Comando* "}" | Comando
 
-//Comando -> (Atribuicao | Repeticao | Teste | Nulo | Leitura | Escrita) ";"
+//Comando -> [Atribuicao | Repeticao | Teste | Nulo | Leitura | Escrita] ";"
 
 
 
