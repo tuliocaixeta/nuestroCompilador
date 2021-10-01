@@ -14,26 +14,27 @@ class Compilador {
         Token token; 
 
         public AnalisadorSintatico() {
-            try {
-                tabela = new TabelaSimbolo();
-                lexico = new AnalisadorLexico(tabela);
-                token = lexico.proximoToken();
-            
+            tabela = new TabelaSimbolo();
+            lexico = new AnalisadorLexico(tabela);
+            token = lexico.proximoToken();
+            // try {
+               
+                
+            //      //System.out.println("token = [" +token.numToken +" , "+ token.texto+" , "+ token.tipo+"]");
+            // } catch (Exception e){
 
-            } catch (Exception e){
-
-               // verificaFinalArquivo();
-                System.out.print(e.getMessage());
-            }
+            //    // verificaFinalArquivo();
+            //     System.out.print(e.getMessage());
+            // }
         }
 
         public void casaToken(byte numTokenEsperado) {
            
             if( token != null ){
                 if( token.getNumToken() == numTokenEsperado){
-                    
+                   //System.out.println("token = [" +token.numToken +" , "+ token.texto+" , "+ token.tipo+"]");
                     token = lexico.proximoToken();
-                   // System.out.println("token = [" +token.numToken +" , "+ token.texto+" , "+ token.tipo+"]");
+                   //System.out.println("token = [" +token.numToken +" , "+ token.texto+" , "+ token.tipo+"]");
                     
                 } else {
                     throw new RuntimeException(linhas + "\ntoken nao esperado ["+token.texto+"].");
@@ -44,25 +45,15 @@ class Compilador {
         }
 
         public void S () {
-            try {
-                while (token != null) {
-                    // declaracao();
-                    // declaracao();
-                    // comando();
-                    while (token != null && (ehDeclaracao()) ||token.getNumToken() == Token.CODIGO_CONST ) {
-                        declaracao();
-                       
-                    } 
-                    while (token != null && ehComando()) {
-                        comandos();
-                    } 
-                }
-            } catch (Exception e) {
-                System.out.print(e.getMessage()); // ver msg
+            if (token == null) throw new RuntimeException( linhas + " linhas compiladas.");
+            while (token != null) {
+                while (token != null && (ehDeclaracao()) || token != null && token.getNumToken() == Token.CODIGO_CONST ) {
+                    declaracao();
+                } 
+                while (token != null && ehComando()) {
+                    comandos();
+                } 
             }
-           
-           
-            
         }
 
         private boolean ehDeclaracao() {
@@ -79,7 +70,7 @@ class Compilador {
                         atrubuicaoDeclaracao();
                     }
                     if (token != null && token.getNumToken() == Token.CODIGO_VIRGULA ) {
-                        while ( token.getNumToken() == Token.CODIGO_VIRGULA ) {
+                        while ( token != null && token.getNumToken() == Token.CODIGO_VIRGULA ) {
                             casaToken(Token.CODIGO_VIRGULA);
                             casaToken(Token.CODIGO_ID);
                             if (token != null && token.getNumToken() == Token.CODIGO_ATRIBUICAO ) {
@@ -218,6 +209,8 @@ class Compilador {
             } else if (token.getNumToken() == Token.CODIGO_FLOAT) {
                 casaToken(Token.CODIGO_FLOAT);
                 parenteses();
+            }else {
+                throw new RuntimeException(linhas + "\ntoken nao esperado ["+token.texto+"].");
             }
         }
 
@@ -232,7 +225,7 @@ class Compilador {
             casaToken(Token.CODIGO_ABREPARENTESES);
             expressao();
             if (token != null && token.getNumToken() == Token.CODIGO_VIRGULA ) {
-                while ( token.getNumToken() == Token.CODIGO_VIRGULA ) {
+                while (token != null && token.getNumToken() == Token.CODIGO_VIRGULA ) {
                     casaToken(Token.CODIGO_VIRGULA);
                     expressao();
                 }
@@ -395,16 +388,16 @@ class Compilador {
         private boolean ehFinalDoArquivo = false;
         private boolean devolverC = false;
         private char caractereDevolvido;
-    //     private char[] conteudoNeto;  /*retirar essa merda pra manda no verde */
-    //     private int posicao;  /*retirar essa merda pra manda no verde */
+        // private char[] conteudoNeto;  /*retirar essa merda pra manda no verde */
+        // private int posicao;  /*retirar essa merda pra manda no verde */
 
         public TabelaSimbolo tabelaSimbolo;
         /*    Construtor do analisador lexico    */
         public AnalisadorLexico(TabelaSimbolo tabelaSimbolo)  {
             try {
-                // var conteudo = new String(Files.readAllBytes(Paths.get("input.in")), StandardCharsets.UTF_8);
-                // conteudoNeto = conteudo.toCharArray();
-                // posicao = 0;
+                //  var conteudo = new String(Files.readAllBytes(Paths.get("input.in")), StandardCharsets.UTF_8);
+                //  conteudoNeto = conteudo.toCharArray();
+                //  posicao = 0;
                 this.tabelaSimbolo = tabelaSimbolo;
                 linhas = 1;
             } catch (Exception e) {
@@ -428,22 +421,51 @@ class Compilador {
             while (true ) {
                 try {
                     atual = nextChar();
+                    //System.out.println("estado = [" +estado+"]");
                 } catch (Exception e) {
                     throw new RuntimeException(linhas + "\n caractere invalido.");
                 }
                 // if ( ehFinalDoArquivo()) {/*retirar essa merda pra manda no verde */
-                // //    if (estado >= 16 && estado <= 20) {
-                //     throw new RuntimeException(linhas + "\nfim de arquivo nao esperado.");
-                // } else if (estado > 1 && estado < 16 ) {
-                //     throw new RuntimeException(linhas + "\nlexema nao identificado ["+textoTokenAtual+"].");
-                // }
-                // return null;
+                //     if (estado >= 16 && estado <= 20) {
+                    //     throw new RuntimeException(linhas + "\nfim de arquivo nao esperado.");
+                    // } else if (estado > 1 && estado < 16 && estado != 14  && estado != 13  && estado != 8  ) {
+                    //     throw new RuntimeException(linhas + "\nlexema nao identificado ["+textoTokenAtual+"].");
+                    // } else  if (estado == 14) {
+                    //     return definirTokenSeTokenIdEhPalavraReservada(textoTokenAtual);  
+                    // } else if (estado == 8) {
+                    //     Token token = new Token();
+                    //     token.setNumToken(Token.CODIGO_CONSTANTE);
+                    //     token.setTexto(textoTokenAtual);
+                    //     token.setTipo("tipo_inteiro");
+                    //     return retornar(token); 
+                    // } else if (estado == 13) {
+                    //     Token token = new Token();
+                    //     token.setNumToken(Token.CODIGO_CONSTANTE);
+                    //     token.setTexto(textoTokenAtual);
+                    //     token.setTipo("tipo_float");
+                    //     return retornar(token); 
+                    // }
+                    // return null;
                 // }
                 if (ehFinalDoArquivo) {
                     if (estado >= 16 && estado <= 20) {
                         throw new RuntimeException(linhas + "\nfim de arquivo nao esperado.");
-                    } else if (estado > 1 && estado < 16 ) {
+                    } else if (estado > 1 && estado < 16 && estado != 14  && estado != 13  && estado != 8  ) {
                         throw new RuntimeException(linhas + "\nlexema nao identificado ["+textoTokenAtual+"].");
+                    } else  if (estado == 14) {
+                        return definirTokenSeTokenIdEhPalavraReservada(textoTokenAtual);  
+                    } else if (estado == 8) {
+                        Token token = new Token();
+                        token.setNumToken(Token.CODIGO_CONSTANTE);
+                        token.setTexto(textoTokenAtual);
+                        token.setTipo("tipo_inteiro");
+                        return retornar(token); 
+                    } else if (estado == 13) {
+                        Token token = new Token();
+                        token.setNumToken(Token.CODIGO_CONSTANTE);
+                        token.setTexto(textoTokenAtual);
+                        token.setTipo("tipo_float");
+                        return retornar(token); 
                     }
                     return null;
                 }
@@ -702,6 +724,7 @@ class Compilador {
                         if (ehNumero(atual) || ehChar(atual) || atual == '.' || atual == '_') {
                             textoTokenAtual += atual;
                             estado = 14;
+                            
                         } else {  // Retorna token ID ou token palavra reservada
                             estado = estadoFinal;
                             devolver(atual);
@@ -755,7 +778,8 @@ class Compilador {
                         if (atual == '*') {
                             textoTokenAtual += atual;
                             estado = 19;         
-                        } else  {
+                        } else  if (atual != '*' && ehValido(atual)){
+                            // System.out.println("atual = [" +atual+"]");
                             estado = estadoFinal;
                             devolver(atual);
                             Token token = new Token();
@@ -777,6 +801,9 @@ class Compilador {
                         if (atual == '/') {
                             textoTokenAtual = "";
                             estado = 0;
+                        } else if (atual == '*') {
+                            textoTokenAtual = "";
+                            estado = 20;
                         } else {
                             textoTokenAtual += atual;
                             estado = 19;
@@ -895,7 +922,8 @@ class Compilador {
                 return caractereDevolvido;
             } else {
                 int caractere = System.in.read();
-                // int caractere = nextCharFile(); /*retirar essa merda pra manda no verde */
+               //  int caractere = nextCharFile(); /*retirar essa merda pra manda no verde */
+               //System.out.println("caractere = [" +caractere+"]");
                 contaLinhas(caractere);
                 if (caractere == -1 || caractere == 65535 ) {
                     ehFinalDoArquivo = true;
@@ -903,7 +931,6 @@ class Compilador {
                 return (char) caractere;
             }
         }
-    
     
         private void contaLinhas(int c) {
             if (c == '\n') {
@@ -926,6 +953,7 @@ class Compilador {
         //     return posicao == conteudoNeto.length ;
         // }
     }
+
     public static class TabelaSimbolo {
         int endereco = 0;
         public HashMap<String, Token> tabela = new HashMap<>();
